@@ -39,18 +39,23 @@
 <script lang="ts">
 import { computed, defineComponent } from 'vue';
 import { useStoreProjeto } from '@/store/projeto-store';
-import { EXCLUIR_PROJETO } from '@/store/tipo-mutacoes';
+import { DELETAR_PROJETO, OBTER_PROJETOS } from '@/store/tipo-acoes.ts';
+import useNotificador from '@/hooks/notificador';
+import { TipoNotificacao } from '@/interfaces/INotificacao';
 
 export default defineComponent({
   name: 'ListaProjetos',
   setup() {
     const storeProjeto = useStoreProjeto();
     const projetos = computed(() => storeProjeto.state.projetos);
+    const { notificar } = useNotificador();
 
     const excluir = (id: string) => {
-      storeProjeto.commit(EXCLUIR_PROJETO, id);
+      storeProjeto.dispatch(DELETAR_PROJETO, id)
+        .then(() => notificar(TipoNotificacao.SUCESSO, 'Removendo projeto', 'Prontinho :) seu projeto foi removido.'));
     };
 
+    storeProjeto.dispatch(OBTER_PROJETOS)
     return {
       storeProjeto,
       projetos,

@@ -17,10 +17,10 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import { useStoreProjeto } from '@/store/projeto-store';
-import { useStoreNotificacao } from '@/store/notificacoes-store';
 import IProjeto from '@/interfaces/IProjeto';
-import { ALTERA_PROJETO, ADICIONA_PROJETO, NOTIFICAR } from '@/store/tipo-mutacoes';
 import { TipoNotificacao } from '@/interfaces/INotificacao';
+import { CADASTRAR_PROJETO, EDITAR_PROJETO } from '@/store/tipo-acoes.ts';
+import useNotificador from '@/hooks/notificador';
 
 export default defineComponent({
   name: 'FormularioProjetos',
@@ -38,28 +38,25 @@ export default defineComponent({
   data() {
     return {
       nomeDoProjeto: '' as string,
-      storeProjeto: useStoreProjeto(),
-      storeNotificacao: useStoreNotificacao()
+      storeProjeto: useStoreProjeto()
     }
   },
   methods: {
     salvar(): void {
       if (this.id) {
-        this.storeProjeto.commit(ALTERA_PROJETO, {
+        this.storeProjeto.dispatch(EDITAR_PROJETO, {
           id: this.id,
           nome: this.nomeDoProjeto
-        });
+        }).then(() => this.lidarComSucesso('Projeto foi editado com sucesso'));
       } else {
-        this.storeProjeto.commit(ADICIONA_PROJETO, this.nomeDoProjeto);
+        this.storeProjeto.dispatch(CADASTRAR_PROJETO, this.nomeDoProjeto)
+          .then(() => this.lidarComSucesso('Projeto foi adicionado com sucesso'));
       }
+    },
+    lidarComSucesso(mensagem: string): void {
       this.nomeDoProjeto = '';
-
-      this.storeNotificacao.commit(NOTIFICAR, {
-        titulo: 'Novo projeto foi salvo',
-        texto: 'Prontinho :) seu projeto já está disponível.',
-        tipo: TipoNotificacao.SUCESSO
-      });
-
+      const { notificar } = useNotificador();
+      notificar(TipoNotificacao.SUCESSO, mensagem, 'Prontinho :) seu projeto já está disponível.');
       this.$router.push('/projetos')
     }
   }
